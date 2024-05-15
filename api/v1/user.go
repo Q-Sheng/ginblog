@@ -1,9 +1,9 @@
 package v1
 
 import (
-	"fmt"
 	"ginblog/model"
 	"ginblog/utils/errmsg"
+	"ginblog/utils/validator"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"strconv"
@@ -20,12 +20,18 @@ var code int
 // 添加用户
 func AddUser(c *gin.Context) {
 	var data model.User
-	if err := c.ShouldBindJSON(&data); err != nil {
-		fmt.Printf("BindJSON ERROR", err)
+	var msg string
+	_ = c.ShouldBindJSON(&data)
+
+	msg, code = validator.Validate(&data)
+	if code != errmsg.SUCCSE {
+		c.JSON(http.StatusOK, gin.H{
+			"status":  code,
+			"message": msg,
+		})
+
+		return
 	}
-	//if err := c.BindJSON(&data); err != nil {
-	//	fmt.Printf("BindJSON ERROR", err)
-	//}
 
 	code = model.CheckUser(data.Username)
 	if code == errmsg.SUCCSE {
@@ -36,7 +42,6 @@ func AddUser(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{
 		"status":  code,
-		"data":    data,
 		"message": errmsg.GetErrMsg(code),
 	})
 
@@ -65,10 +70,31 @@ func GetUsers(c *gin.Context) {
 
 // 编辑用户
 func EditUser(c *gin.Context) {
+	var data model.User
+	id, _ := strconv.Atoi(c.Param("id"))
+	c.ShouldBindJSON(&data)
+	code = model.CheckUser(data.Username)
+	if code == errmsg.SUCCSE {
+		model.EditUser(id, &data)
+	}
+
+	if code == errmsg.ERROR_USERNAME_USED {
+		c.Abort()
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"status":  code,
+		"message": errmsg.GetErrMsg(code),
+	})
 
 }
 
 // 删除用户
 func DeleteUser(c *gin.Context) {
+	id, _ := strconv.Atoi(c.Param("id"))
+	code = model.DeleteUser(id)
+	c.JSON(http.StatusOK, gin.H{
+		"status":  code,
+		"message": errmsg.GetErrMsg(code),
+	})
 
 }

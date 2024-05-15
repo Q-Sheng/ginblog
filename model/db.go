@@ -25,7 +25,7 @@ func InitDb() {
 	}
 
 	//初次运行后可注释
-	_ = db.AutoMigrate(&User{}, &Article{}, &Category{})
+	//_ = db.AutoMigrate(&User{}, &Article{}, &Category{})
 
 	sqlDB, _ := db.DB()
 	// SetMaxIdleConns sets the maximum number of connections in the idle connection pool.
